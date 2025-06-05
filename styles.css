@@ -121,9 +121,9 @@ body {
 
 .audio-control {
   position: fixed;
-  top: 20px;
+  top: 90px; /* 헤더 아래로 이동 */
   right: 20px;
-  z-index: 1000;
+  z-index: 998; /* 헤더보다 낮게 설정 */
 }
 
 #audioToggle {
@@ -262,6 +262,8 @@ body {
   justify-content: center;
   padding: 6rem 2rem 2rem;
   position: relative;
+  /* 레이아웃 안정성 확보 */
+  overflow: hidden;
 }
 
 .hero-content {
@@ -416,6 +418,10 @@ body {
   box-shadow: var(--shadow-card);
   position: relative;
   z-index: 2;
+  /* 이미지 로딩 중 레이아웃 시프트 방지 */
+  aspect-ratio: 3/4;
+  object-fit: cover;
+  background: rgba(0, 212, 255, 0.1);
 }
 
 .image-effects {
@@ -1003,6 +1009,8 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 2rem;
+  /* 레이아웃 시프트 방지 */
+  min-height: 400px;
 }
 
 .gallery-item {
@@ -1013,6 +1021,10 @@ body {
   transition: all 0.3s ease;
   background: var(--gradient-card);
   border: 1px solid var(--border-color);
+  /* 레이아웃 시프트 방지 */
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
 }
 
 .gallery-item:hover {
@@ -1025,6 +1037,8 @@ body {
   height: 250px;
   object-fit: cover;
   transition: transform 0.3s ease;
+  /* 이미지 로딩 중 레이아웃 시프트 방지 */
+  background: rgba(0, 212, 255, 0.1);
 }
 
 .gallery-item:hover img {
@@ -1401,7 +1415,7 @@ body {
   }
   
   .audio-control {
-    top: 10px;
+    top: 80px; /* 헤더 아래로 이동 */
     right: 10px;
   }
   
@@ -1549,4 +1563,39 @@ a:focus {
 .success {
   color: var(--success-color);
   border-color: var(--success-color);
-} 
+}
+
+/* =============================================================================
+   Loading States
+============================================================================= */
+
+.loading-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  grid-column: 1 / -1;
+  font-size: 1.2rem;
+  letter-spacing: 2px;
+  opacity: 0.7;
+}
+
+/* 이미지 로딩 스켈레톤 효과 */
+.gallery-item img[src=""],
+.gallery-item img:not([src]),
+img[loading="lazy"]:not([src]) {
+  background: linear-gradient(90deg, 
+    rgba(0, 212, 255, 0.1) 25%, 
+    rgba(0, 212, 255, 0.2) 50%, 
+    rgba(0, 212, 255, 0.1) 75%
+  );
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
+}
+
+@keyframes loading-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}

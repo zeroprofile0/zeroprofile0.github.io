@@ -132,6 +132,9 @@ class ZeroWebsite {
         const galleryGrid = document.querySelector('.gallery-grid');
         if (!galleryGrid) return;
 
+        // 로딩 상태 표시로 레이아웃 시프트 방지
+        galleryGrid.innerHTML = '<div class="loading-placeholder">갤러리 로딩 중...</div>';
+
         // Gallery image data with categories
         const galleryImages = [
             {
@@ -208,32 +211,35 @@ class ZeroWebsite {
             }
         ];
 
-        galleryGrid.innerHTML = '';
+        // 로딩 플레이스홀더 제거 후 실제 콘텐츠 로드
+        setTimeout(() => {
+            galleryGrid.innerHTML = '';
 
-        galleryImages.forEach((image, index) => {
-            const galleryItem = document.createElement('div');
-            galleryItem.className = `gallery-item ${image.category}`;
-            galleryItem.style.animationDelay = `${index * 0.1}s`;
-            
-            galleryItem.innerHTML = `
-                <img src="${image.src}" alt="${image.title}" loading="lazy">
-                <div class="gallery-overlay">
-                    <div class="gallery-info">
-                        <h4>${image.title}</h4>
-                        <p>${image.description}</p>
+            galleryImages.forEach((image, index) => {
+                const galleryItem = document.createElement('div');
+                galleryItem.className = `gallery-item ${image.category}`;
+                galleryItem.style.animationDelay = `${index * 0.1}s`;
+                
+                galleryItem.innerHTML = `
+                    <img src="${image.src}" alt="${image.title}" loading="lazy">
+                    <div class="gallery-overlay">
+                        <div class="gallery-info">
+                            <h4>${image.title}</h4>
+                            <p>${image.description}</p>
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
 
-            galleryItem.addEventListener('click', () => {
-                this.openModal(image.src, image.title);
+                galleryItem.addEventListener('click', () => {
+                    this.openModal(image.src, image.title);
+                });
+
+                galleryGrid.appendChild(galleryItem);
             });
 
-            galleryGrid.appendChild(galleryItem);
-        });
-
-        // Animate gallery items on load
-        this.animateGalleryItems();
+            // Animate gallery items on load
+            this.animateGalleryItems();
+        }, 100); // 100ms 후에 로드
     }
 
     setupGalleryFilter() {
@@ -383,11 +389,26 @@ class ZeroWebsite {
         const heroImage = document.querySelector('.hero-img');
         if (!heroImage) return;
 
-        window.addEventListener('scroll', () => {
+        // 성능 최적화를 위한 throttle 적용
+        let ticking = false;
+        
+        const updateParallax = () => {
             const scrolled = window.pageYOffset;
-            const rate = scrolled * -0.1;
-            heroImage.style.transform = `translateY(${rate}px)`;
-        });
+            const rate = scrolled * -0.05; // 효과를 줄여서 레이아웃 시프트 최소화
+            
+            // will-change 속성으로 GPU 가속 활성화
+            heroImage.style.willChange = 'transform';
+            heroImage.style.transform = `translate3d(0, ${rate}px, 0)`;
+            
+            ticking = false;
+        };
+
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                requestAnimationFrame(updateParallax);
+                ticking = true;
+            }
+        }, { passive: true });
     }
 
     handleScroll() {
@@ -515,16 +536,23 @@ class ZeroWebsite {
     // Utility Functions
     // =============================================================================
     animateOnLoad() {
-        // Add loading animations
+        // Add loading animations with better performance
         const elements = document.querySelectorAll('.hero-text, .hero-image');
         elements.forEach((element, index) => {
+            // GPU 가속을 위해 will-change 속성 설정
+            element.style.willChange = 'opacity, transform';
             element.style.opacity = '0';
-            element.style.transform = 'translateY(50px)';
+            element.style.transform = 'translate3d(0, 50px, 0)';
             
             setTimeout(() => {
                 element.style.transition = 'opacity 1s ease, transform 1s ease';
                 element.style.opacity = '1';
-                element.style.transform = 'translateY(0)';
+                element.style.transform = 'translate3d(0, 0, 0)';
+                
+                // 애니메이션 완료 후 will-change 제거
+                setTimeout(() => {
+                    element.style.willChange = 'auto';
+                }, 1000);
             }, index * 200);
         });
     }
